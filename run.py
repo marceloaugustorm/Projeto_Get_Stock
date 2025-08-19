@@ -1,6 +1,7 @@
 from flask import Flask
-from src.config.data_base import init_db
+from src.config.data_base import init_db, db
 from src.routes import init_routes
+from src.Infrastructure.Model.user import User  # importa os modelos para criar as tabelas
 
 def create_app():
     """
@@ -11,6 +12,10 @@ def create_app():
     init_db(app)
 
     init_routes(app)
+
+    # Cria as tabelas
+    with app.app_context():
+        db.create_all()
 
     return app
 

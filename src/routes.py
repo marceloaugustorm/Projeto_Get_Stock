@@ -12,5 +12,9 @@ def init_routes(app):
     def register_user():
         return UserController.register_user()
     
+    @app.route('/verifica', methods=['GET'])
+    def verify():
+        return UserController.verifica_user()
+    
     
 
