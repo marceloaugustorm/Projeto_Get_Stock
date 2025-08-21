@@ -23,12 +23,10 @@ class UserController:
     
     @staticmethod
     def get_user(id):
-        data = request.get_json()
-        id = data.get('id')
         user = UserService.resgata_user(id)
         if not user:
             return(jsonify({"message": "Usuário não encontrado"}))
-        return (jsonify(user))
+        return (jsonify({"Usuário encontrado": user}))
 
     
     @staticmethod
@@ -49,22 +47,20 @@ class UserController:
     @staticmethod
     def atualiza_user(id):
         data = request.get_json()
-        name = request.get('name')
-        email = data.get('email')
-        password = data.get('password')
-        cnpj = data.get('cnpj')
-        celular = data.get('celular')
 
-        if not name or not email or not password or not cnpj or not celular:
-            return make_response(jsonify({"erro": "Missing required fields"}), 400)
-
-        user = UserService.put_user(id)
+        user = UserService.put_user(
+            id,
+            name=data.get('name'),
+            email=data.get('email'),
+            password=data.get('password'),
+            cnpj=data.get('cnpj'),
+            celular=data.get('celular')
+        )
 
         if not user:
-            return jsonify({"message": "Usuário nã encontrado"})
+            return jsonify({"message": "Usuário não encontrado"}), 404
         
-        else:
-            return jsonify((user))
+        return jsonify({"message": "Usuário Atualizado", "user": user}), 200
              
 
 

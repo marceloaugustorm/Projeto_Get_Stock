@@ -24,19 +24,19 @@ class UserService:
     def put_user(id, name = None, email = None, password = None, cnpj = None, celular = None):
         user = User.query.filter_by(id = id).first()
 
-        if not name:
+        if name:
             user.name = name
-        if not email:
+        if email:
             user.email = email
-        if not password:
+        if password is not None:
             user.password = password
-        if not cnpj:
+        if cnpj:
             user.cnpj = cnpj
-        if not celular:
+        if celular:
             user.celular = celular
 
         db.session.commit()
-        return user
+        return user.to_dict()
             
     @staticmethod
     def resgata_user(id):
@@ -44,5 +44,5 @@ class UserService:
         if not user:
             return None
         else:
-            return UserService.to_dict(user)
+            return user.to_dict()
 
