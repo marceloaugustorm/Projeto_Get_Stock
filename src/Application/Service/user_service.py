@@ -19,3 +19,30 @@ class UserService:
         else:
             if user:
                 return("Bem - Vindo")
+    
+    @staticmethod
+    def put_user(id, name = None, email = None, password = None, cnpj = None, celular = None):
+        user = User.query.filter_by(id = id).first()
+
+        if not name:
+            user.name = name
+        if not email:
+            user.email = email
+        if not password:
+            user.password = password
+        if not cnpj:
+            user.cnpj = cnpj
+        if not celular:
+            user.celular = celular
+
+        db.session.commit()
+        return user
+            
+    @staticmethod
+    def resgata_user(id):
+        user = User.query.filter_by(id = id).first()
+        if not user:
+            return None
+        else:
+            return UserService.to_dict(user)
+
