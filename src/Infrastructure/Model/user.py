@@ -7,7 +7,9 @@ class User(db.Model):
     password = db.Column(db.String(100), nullable=False)
     cnpj = db.Column(db.String(14), nullable=False)
     celular = db.Column(db.String(15), nullable=False)
+    codigo_validacao = db.Column(db.String(10), nullable=True)
     status = db.Column(db.String(100), nullable=False)
+    
 
 
     def to_dict(self):
@@ -18,5 +20,6 @@ class User(db.Model):
             "password": self.password,
             "cnpj": self.cnpj,
             "celular": self.celular,
+            "codigo_validacao": self.codigo_validacao,
             "status": self.status
         }

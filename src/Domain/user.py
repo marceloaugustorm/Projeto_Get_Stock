@@ -1,10 +1,11 @@
 class UserDomain:
-    def __init__(self, name, email, password, cnpj, celular, status):
+    def __init__(self, name, email, password, cnpj, celular,codigo_validacao, status):
         self.name = name
         self.email = email
         self.password = password
         self.cnpj = cnpj
         self.celular = celular
+        self.codigo_validacao = codigo_validacao
         self.status = status
         
     

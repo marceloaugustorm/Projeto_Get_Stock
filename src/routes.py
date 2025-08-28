@@ -25,5 +25,11 @@ def init_routes(app):
     def put(id):
         return UserController.atualiza_user(id)
     
+
+    
+    
+
+
+    
     
 
