@@ -2,7 +2,7 @@ import random
 from twilio.rest import Client
 
 class WhatsAppService:
-    def __init__(self, account_sid, auth_token, from_whatsapp_number):
+    def _init_(self, account_sid, auth_token, from_whatsapp_number):
         self.client = Client(account_sid, auth_token)
         self.from_whatsapp_number = from_whatsapp_number
         self.codigo_ativo = {}
@@ -17,7 +17,7 @@ class WhatsAppService:
         message = self.client.messages.create(
             body=mensagem,
             from_=self.from_whatsapp_number,
-            to=f"whatsapp:{to_whatsapp_number}"  
+            to={to_whatsapp_number}
         )
         self.codigo_ativo[to_whatsapp_number] = codigo
         print(f"Mensagem enviada! SID: {message.sid}")
