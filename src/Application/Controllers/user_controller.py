@@ -49,13 +49,11 @@ class UserController:
         email = data.get('email')
         password = data.get('password')
 
-        user = UserService.verifica_user(email, password)
+        if not email or not password:
+            return jsonify({"message": "Email e senha são obrigatórios"})
 
-        if user:
-            return jsonify({"message": "Bem vindo"})
-        
-        if not user:
-            return jsonify({"message": "Usuário ou senha Invalidos"})
+        resultado = UserService.verifica_user(email, password)
+        return jsonify({"message": resultado})
         
     
     @staticmethod
