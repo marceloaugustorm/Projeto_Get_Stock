@@ -1,12 +1,38 @@
 from src.Domain.user import UserDomain
 from src.Infrastructure.Model.user import User
-from src.config.data_base import db 
+from src.config.data_base import db
+from src.Infrastructure.http.whats_app import WhatsAppService
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()  
+
+account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+from_whatsapp_number = os.getenv("TWILIO_PHONE_NUMBER")
 
 class UserService:
     @staticmethod
     def create_user(name, email, password, cnpj, celular):
-        new_user = UserDomain(name, email, password, cnpj, celular, status = False)
-        user = User(name=new_user.name, email=new_user.email, password=new_user.password, cnpj = new_user.cnpj, celular = new_user.celular, status = False)        
+        ddd = 55
+        numero_formatado = f'whatsapp:+{ddd}{celular}'
+        whats_service = WhatsAppService(account_sid, auth_token, from_whatsapp_number)
+        codigo = whats_service.enviar_codigo(numero_formatado)
+
+    
+        new_user = UserDomain(name, email, password, cnpj, celular, codigo_validacao=codigo, status=False)
+        user = User(
+            name=new_user.name,
+            email=new_user.email,
+            password=new_user.password,
+            cnpj=new_user.cnpj,
+            celular=new_user.celular,
+            codigo_validacao=new_user.codigo_validacao,
+            status=False
+        )
+
+       
         db.session.add(user)
         db.session.commit()
         return user
