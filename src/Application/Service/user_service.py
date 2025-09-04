@@ -53,18 +53,7 @@ class UserService:
             db.session.commit()
             return True
         return False
-    
-    @staticmethod
-    def validar_codigo(codigo_digitado, celular):
-        user = User.query.filter_by(celular=celular).first()
-        if not user:
-            return False
-        
-        if user.codigo_validacao == codigo_digitado:
-            user.status = "ATIVO"
-            db.session.commit()
-            return True
-        return False
+
 
        
     @staticmethod
