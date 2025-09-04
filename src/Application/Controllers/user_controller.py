@@ -21,6 +21,20 @@ class UserController:
             "usuarios": user.to_dict()
         }), 200)
     
+
+    @staticmethod
+    def validate_code():
+        data = request.get_json()
+        id = data.get('id')
+        codigo_digitado = data.get('codigo_digitado')
+
+        user = UserService.validar_codigo(id, codigo_digitado)
+
+        if user:
+            return jsonify({"message": "Usuário Validado"})
+        else:
+            return jsonify({"message": "Código Inválidado"})
+    
     @staticmethod
     def get_user(id):
         user = UserService.resgata_user(id)
@@ -30,7 +44,7 @@ class UserController:
 
     
     @staticmethod
-    def verifica_user():
+    def verify_user():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')

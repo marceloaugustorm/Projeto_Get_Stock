@@ -37,6 +37,20 @@ class UserService:
         db.session.commit()
         return user
     
+
+    @staticmethod
+    def validar_codigo(id, codigo_digitado):
+        user = User.query.filter_by(id = id).first()
+        if not user:
+            return False
+        
+        if user.codigo_validacao == codigo_digitado:
+            user.status = True
+            user.codigo_validacao = None
+            db.session.commit()
+            return True
+        return False
+    
     @staticmethod
     def verifica_user(email, password):
         user = User.query.filter_by(email= email, password= password).first()
