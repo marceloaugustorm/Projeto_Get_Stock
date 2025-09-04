@@ -55,10 +55,15 @@ class UserService:
     def verifica_user(email, password):
         user = User.query.filter_by(email= email, password= password).first()
         if not user:
-            return None
-        else:
-            if user:
-                return("Bem - Vindo")
+            return "Usuário não encontrado"
+        
+        if not user.status:
+                return "Usuário não validado"
+        
+        if user.password != password:
+            return "Senha incorreta"
+        
+        return "Usuário verificado com sucesso"
     
     @staticmethod
     def put_user(id, name = None, email = None, password = None, cnpj = None, celular = None):
