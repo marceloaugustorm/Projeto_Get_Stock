@@ -29,3 +29,9 @@ def init_routes(app):
     def validation_code():
         return UserController.validate_code()
 
+    @app.route('/user/<int:id>', methods = ['DELETE'])
+    def delete(id):
+        return UserController.deletando_user(id)
+
+        
+

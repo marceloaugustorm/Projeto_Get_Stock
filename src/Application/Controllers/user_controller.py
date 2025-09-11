@@ -73,6 +73,17 @@ class UserController:
             return jsonify({"message": "Usuário não encontrado"}), 404
         
         return jsonify({"message": "Usuário Atualizado", "user": user}), 200
+
+    @staticmethod
+    def deletando_user(id):
+        data = request.get_json()
+
+        user = UserService.deletar_user(id)
+
+        if not user:
+            return jsonify({"message": "O Usuário foi deletado corretamente"}), 404
+
+        return jsonify({"message": "Usuário não deletado"})
              
 
 

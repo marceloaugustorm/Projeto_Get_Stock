@@ -96,3 +96,15 @@ class UserService:
         else:
             return user.to_dict()
 
+    @staticmethod
+    def deletar_user(id):
+        user = User.query.filter_by(id = id).first()
+        if not user:
+            return None
+        else:
+            db.session.delete(user)
+            db.session.commit()
+
+    
+    
+
