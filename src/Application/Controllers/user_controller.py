@@ -21,6 +21,20 @@ class UserController:
             "usuarios": user.to_dict()
         }), 200)
     
+
+    @staticmethod
+    def validate_code():
+        data = request.get_json()
+        id = data.get('id')
+        codigo_digitado = data.get('codigo_digitado')
+
+        user = UserService.validar_codigo(id, codigo_digitado)
+
+        if user:
+            return jsonify({"message": "Usuário Validado"})
+        else:
+            return jsonify({"message": "Código Inválido"})
+    
     @staticmethod
     def get_user(id):
         user = UserService.resgata_user(id)
@@ -30,18 +44,16 @@ class UserController:
 
     
     @staticmethod
-    def verifica_user():
+    def verify_user():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
 
-        user = UserService.verifica_user(email, password)
+        if not email or not password:
+            return jsonify({"message": "Email e senha são obrigatórios"})
 
-        if user:
-            return jsonify({"message": "Bem vindo"})
-        
-        if not user:
-            return jsonify({"message": "Usuário ou senha Invalidos"})
+        resultado = UserService.verifica_user(email, password)
+        return jsonify({"message": resultado})
         
     
     @staticmethod
@@ -61,6 +73,17 @@ class UserController:
             return jsonify({"message": "Usuário não encontrado"}), 404
         
         return jsonify({"message": "Usuário Atualizado", "user": user}), 200
+
+    @staticmethod
+    def deletando_user(id):
+        data = request.get_json()
+
+        user = UserService.deletar_user(id)
+
+        if not user:
+            return jsonify({"message": "O Usuário foi deletado corretamente"}), 404
+
+        return jsonify({"message": "Usuário não deletado"})
              
 
 
