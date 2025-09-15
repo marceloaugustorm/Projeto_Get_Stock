@@ -1,5 +1,7 @@
 from flask import request, jsonify, make_response
+from flask_jwt_extended import create_access_token
 from src.Application.Service.user_service import UserService
+
 
 class UserController:
     @staticmethod
@@ -11,7 +13,6 @@ class UserController:
         cnpj = data.get('cnpj')
         celular = data.get('celular')
 
-
         if not name or not email or not password or not cnpj or not celular:
             return make_response(jsonify({"erro": "Missing required fields"}), 400)
 
@@ -21,7 +22,13 @@ class UserController:
             "usuarios": user.to_dict()
         }), 200)
     
-
+    @staticmethod
+    def get_user(id):
+        user = UserService.resgata_user(id)
+        if not user:
+            return jsonify({"message": "Usuário não encontrado"}), 404
+        return jsonify({"Usuário encontrado": user}), 200
+    
     @staticmethod
     def validate_code():
         data = request.get_json()
@@ -34,32 +41,27 @@ class UserController:
             return jsonify({"message": "Usuário Validado"})
         else:
             return jsonify({"message": "Código Inválido"})
-    
-    @staticmethod
-    def get_user(id):
-        user = UserService.resgata_user(id)
-        if not user:
-            return(jsonify({"message": "Usuário não encontrado"}))
-        return (jsonify({"Usuário encontrado": user}))
 
-    
     @staticmethod
     def verify_user():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
 
-        if not email or not password:
-            return jsonify({"message": "Email e senha são obrigatórios"})
+        user, msg = UserService.verifica_user(email, password)
 
-        resultado = UserService.verifica_user(email, password)
-        return jsonify({"message": resultado})
+        if user:
+            access_token = create_access_token(identity={"id": user.id, "email": user.email})
+            return jsonify({
+                "message": msg,
+                "token": access_token
+            }), 200
         
+        return jsonify({"message": msg}), 401
     
     @staticmethod
     def atualiza_user(id):
         data = request.get_json()
-
         user = UserService.put_user(
             id,
             name=data.get('name'),
@@ -73,19 +75,3 @@ class UserController:
             return jsonify({"message": "Usuário não encontrado"}), 404
         
         return jsonify({"message": "Usuário Atualizado", "user": user}), 200
-
-    @staticmethod
-    def deletando_user(id):
-        data = request.get_json()
-
-        user = UserService.deletar_user(id)
-
-        if not user:
-            return jsonify({"message": "O Usuário foi deletado corretamente"}), 404
-
-        return jsonify({"message": "Usuário não deletado"})
-             
-
-
-
-        

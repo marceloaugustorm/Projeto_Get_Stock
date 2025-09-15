@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv()  
 
-account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-from_whatsapp_number = os.getenv("TWILIO_PHONE_NUMBER")
+account_sid = ""
+auth_token = ""
+from_whatsapp_number = "whatsapp:+14155238886"
 
 
 class UserService:
@@ -58,17 +58,18 @@ class UserService:
        
     @staticmethod
     def verifica_user(email, password):
-        user = User.query.filter_by(email= email, password= password).first()
+        user = User.query.filter_by(email=email).first()
+        
         if not user:
-            return "Usuário não encontrado"
+            return None, "Usuário não encontrado"
         
         if not user.status:
-                return "Usuário não validado"
+            return None, "Usuário não validado"
         
         if user.password != password:
-            return "Senha incorreta"
+            return None, "Senha incorreta"
         
-        return "Usuário verificado com sucesso"
+        return user, "Usuário verificado com sucesso"
     
     @staticmethod
     def put_user(id, name = None, email = None, password = None, cnpj = None, celular = None):
