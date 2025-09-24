@@ -29,18 +29,36 @@ class UserController:
             return jsonify({"message": "Usuário não encontrado"}), 404
         return jsonify({"Usuário encontrado": user}), 200
     
+
+    @staticmethod
+    def delete_user(id):
+        result = UserService.deletar_user(id)
+        if result is True:
+            return jsonify({"message":"Usuário deletado com sucesso"}), 200
+        elif result is False:
+            return jsonify({"message": "Usuário não encontrado"}), 404
+        else:
+            return jsonify({"message": "Erro ao deletar o usuário"}), 500
+    
     @staticmethod
     def validate_code():
         data = request.get_json()
         id = data.get('id')
         codigo_digitado = data.get('codigo_digitado')
 
-        user = UserService.validar_codigo(id, codigo_digitado)
+        user,msg = UserService.validar_codigo(id, codigo_digitado)
 
         if user:
-            return jsonify({"message": "Usuário Validado"})
+            access_token = create_access_token(identity=str(user.id))
+            return jsonify({
+                "message": msg,
+                "token": access_token
+            }), 200
         else:
-            return jsonify({"message": "Código Inválido"})
+            return jsonify({"message": msg}), 401
+        
+        
+    
 
     @staticmethod
     def verify_user():
@@ -51,13 +69,9 @@ class UserController:
         user, msg = UserService.verifica_user(email, password)
 
         if user:
-            access_token = create_access_token(identity={"id": user.id, "email": user.email})
-            return jsonify({
-                "message": msg,
-                "token": access_token
-            }), 200
-        
-        return jsonify({"message": msg}), 401
+            return jsonify({"message": "Usuário direcionado para validar o código"}), 200
+        else:
+            return jsonify({"message": msg}), 401
     
     @staticmethod
     def atualiza_user(id):
