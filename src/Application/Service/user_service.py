@@ -43,16 +43,17 @@ class UserService:
 
     @staticmethod
     def validar_codigo(id, codigo_digitado):
-        user = User.query.filter_by(id = id).first()
+        user = User.query.filter_by(id=id).first()
         if not user:
-            return False
+            return None, "Usuário não encontrado"
         
         if user.codigo_validacao == codigo_digitado:
             user.status = True
             user.codigo_validacao = None
             db.session.commit()
-            return True
-        return False
+            return user, "Código validado com sucesso"
+        
+        return None, "Código inválido"
 
 
        
@@ -63,13 +64,10 @@ class UserService:
         if not user:
             return None, "Usuário não encontrado"
         
-        if not user.status:
-            return None, "Usuário não validado"
-        
         if user.password != password:
             return None, "Senha incorreta"
         
-        return user, "Usuário verificado com sucesso"
+        return user, "Usuário direcionado para validar codigo"
     
     @staticmethod
     def put_user(id, name = None, email = None, password = None, cnpj = None, celular = None):
@@ -99,9 +97,13 @@ class UserService:
 
     @staticmethod
     def deletar_user(id):
-        user = User.query.filter_by(id = id).first()
+        user = User.query.filter_by(id=id).first()
         if not user:
-            return None
-        else:
+            return False
+        try:
             db.session.delete(user)
             db.session.commit()
+            return True
+        except:
+            db.session.rollback()
+            return None
