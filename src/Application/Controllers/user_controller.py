@@ -43,13 +43,13 @@ class UserController:
     @staticmethod
     def validate_code():
         data = request.get_json()
-        id = data.get('id')
+        cnpj = data.get('cnpj')
         codigo_digitado = data.get('codigo_digitado')
 
-        user,msg = UserService.validar_codigo(id, codigo_digitado)
+        user,msg = UserService.validar_codigo(cnpj, codigo_digitado)
 
         if user:
-            access_token = create_access_token(identity=str(user.id))
+            access_token = create_access_token(identity=str(user.cnpj))
             return jsonify({
                 "message": msg,
                 "token": access_token
@@ -69,7 +69,7 @@ class UserController:
         user, msg = UserService.verifica_user(email, password)
 
         if user:
-            return jsonify({"message": "Usuário direcionado para validar o código"}), 200
+            return jsonify({"message": "Usuário Logado"}), 200
         else:
             return jsonify({"message": msg}), 401
     
