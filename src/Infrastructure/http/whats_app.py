@@ -21,5 +21,6 @@ class WhatsAppService:
         )
         self.codigo_ativo[to_whatsapp_number] = codigo
         print(f"Mensagem enviada! SID: {message.sid}")
+        print(f"AAAAAAAAAAAAAAAAAAAAAAA {to_whatsapp_number}")
         return codigo
 
