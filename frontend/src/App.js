@@ -3,7 +3,7 @@ import Header from "./components/header";
 import Home from "./pages/HomePage/home";
 import Login from "./pages/Login/login";
 import Cadastro from "./pages/Cadastrar/cadastrar";
-import Cód from "./pages/Verificar_cod/verificar_cod";
+import Verificar_cod from "./pages/Verificar_cod/verificar_cod";
 
 function App() {
   return (
