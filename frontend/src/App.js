@@ -3,6 +3,7 @@ import Header from "./components/header";
 import Home from "./pages/HomePage/home";
 import Login from "./pages/Login/login";
 import Cadastro from "./pages/Cadastrar/cadastrar";
+import Cód from "./pages/Verificar_cod/verificar_cod";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/verificar_cod" element={<Verificar_cod />} />
       </Routes>
     </Router>
   );
