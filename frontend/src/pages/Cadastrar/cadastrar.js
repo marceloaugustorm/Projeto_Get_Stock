@@ -30,7 +30,7 @@ function Cadastro() {
 
       if(response.ok){
         alert("Usuário cadastrado com sucesso!");
-        navigate("/cod");
+        navigate("/verificar_cod");
       } else{
         alert("Erro ao cadastrar usuário!");
       }
