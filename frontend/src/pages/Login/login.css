@@ -1,3 +1,60 @@
-.h1{
-    font-family: 'Times New Roman', Times, serif;
+#quadrado_login h1{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 30px;
+    
+}
+
+
+.container2{
+    border: 2px solid black;
+    width: 400px;
+    height: 400px;
+    margin: 120px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+}
+
+.container2 .grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+    
+}
+
+#quadrado_login input{
+    padding: 12px;
+    border: none;
+    background-color: #a83737;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    color: #000;
+    max-width: 450px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#quadrado_login input::placeholder{
+    color: #000;
+}
+
+
+#quadrado_login button{
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 12px;
+    background-color: #a83737;
+    border: 1px solid #000;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+#quadrado_login button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
 }
