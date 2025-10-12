@@ -29,6 +29,8 @@ function Cadastro() {
       });
 
       if(response.ok){
+        const data = await response.json();
+        localStorage.setItem("cnpj", formData.cnpj);
         alert("Usuário cadastrado com sucesso!");
         navigate("/verificar_cod");
       } else{
