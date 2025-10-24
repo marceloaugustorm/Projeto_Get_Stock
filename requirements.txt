@@ -4,3 +4,4 @@ mysql-connector-python
 werkzeug==2.0.2
 sqlalchemy==1.4.49
 Flask-JWT-Extended==4.6.0
+Flask-CORS==4.0.0
