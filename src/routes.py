@@ -1,4 +1,5 @@
 from src.Application.Controllers.user_controller import UserController
+from src.Application.Controllers.produto_controller import ProdutoController
 from flask import jsonify, make_response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -36,3 +37,31 @@ def init_routes(app):
     @jwt_required()
     def delete(id):
         return UserController.delete_user(id)
+    
+    @app.route('/produto', methods = ['POST'])
+    def criar_produto():
+        return ProdutoController.register_produto()
+    
+    @app.route('/produto', methods = ['GET'])
+    def listar():
+        return ProdutoController.list_product()
+    
+
+    @app.route('/produto/<int:id>', methods = ['PUT'])
+    def att_produto(id):
+        return ProdutoController.att_produto(id)
+    
+
+    @app.route('/ativar/<int:id>', methods = ['PATCH'])
+    def ativar_product(id):
+        return ProdutoController.ativar_produto(id)
+    
+    @app.route('/desativar/<int:id>', methods = ['PATCH'])
+    def desativar_product(id):
+        return ProdutoController.inativar_produto(id)
+    
+
+    @app.route('/produto/<int:id>', methods = ['DELETE'])
+    def exclusao_produto(id):
+        return ProdutoController.deletar_produto(id)
+    
