@@ -12,13 +12,15 @@ def create_app():
     """
     app = Flask(__name__)
 
-    CORS(app, resources={
-        r"/*": {
-            "origins": ["http://localhost:3000"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
-        }
-    })
+    CORS(app)
+
+    # CORS(app, resources={
+    #     r"/*": {
+    #         "origins": ["http://10.0.0.41:5000/"],
+    #         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    #         "allow_headers": ["Content-Type", "Authorization"]
+    #     }
+    # })
     
   
     app.config["JWT_SECRET_KEY"] = "flaroque"  
