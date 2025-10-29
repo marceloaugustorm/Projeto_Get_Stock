@@ -65,3 +65,6 @@ def init_routes(app):
     def exclusao_produto(id):
         return ProdutoController.deletar_produto(id)
     
+    @app.route('/produto/vender/<int:id>', methods=['PATCH'])
+    def vender_produto(id):
+        return ProdutoController.vender(id)
