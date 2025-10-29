@@ -98,7 +98,23 @@ class ProdutoService:
 
         return True
 
+    @staticmethod
+    def vender_produto(id, quantidade_venda):
+        produto = Produto.query.filter_by(id=id).first()
+        
+        if not produto:
+            return None, "Produto não encontrado"
 
+        if not produto.status:
+            return None, "Produto inativo!"
+
+        if produto.quantidade < quantidade_venda:
+            return None, "Estoque insuficiente!"
+
+        produto.quantidade -= quantidade_venda
+        db.session.commit()
+
+        return produto, None
     
 
 
