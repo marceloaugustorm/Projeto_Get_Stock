@@ -52,20 +52,34 @@ class ProdutoController:
 
     @staticmethod
     def att_produto(id):
-        nome = request.form.get("nome")
-        preco = request.form.get("preco")
-        quantidade = request.form.get("quantidade")
-        imagem = request.files.get("imagem")
-        
-        if not any([nome, preco, quantidade, imagem]):
-            return jsonify({"erro": "Campos obrigatórios faltando."}), 400
-        
-        produtos = ProdutoService.atualizar_produtos(id, nome, preco, quantidade, imagem)
+        data = request.get_json()
+        nome = data.get("nome")
+        preco = data.get("preco")
+        quantidade = data.get("quantidade")
 
-        if produtos:
-            return jsonify(produtos.to_dict_product())
+        produto = ProdutoService.atualizar_produtos(
+            id, nome=nome, preco=preco, quantidade=quantidade
+        )
+
+        if not produto:
+            return jsonify({"erro": "Produto não encontrado"}), 404
         
-        return jsonify({"message": "Erro ao atualizar produto"})
+        return jsonify(produto.to_dict_product()), 200
+
+
+    @staticmethod
+    def vender(id):
+        quantidade_venda = int(request.json.get("quantidade_venda", 1))
+
+        produto, erro = ProdutoService.vender_produto(id, quantidade_venda)
+
+        if erro:
+            return jsonify({"erro": erro}), 400
+
+        return jsonify({
+            "message": "Venda realizada com sucesso!",
+            "produto": produto.to_dict_product()
+        }), 200
     
 
     @staticmethod
