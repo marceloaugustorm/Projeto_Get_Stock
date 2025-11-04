@@ -1,8 +1,9 @@
 from src.Domain.produto import ProdutoDomain
 from src.Infrastructure.Model.produto import Produto
+from src.Infrastructure.Model.venda import Venda
 from werkzeug.utils import secure_filename
 from src.config.data_base import db
-import os 
+import os
 
 
 class ProdutoService:
@@ -11,23 +12,20 @@ class ProdutoService:
         new_produto = ProdutoDomain(nome, preco, quantidade, status, imagem)
 
         produto = Produto(
-            nome = new_produto.nome,
-            preco = new_produto.preco,
-            quantidade = new_produto.quantidade,
-            status = new_produto.status,
-            imagem = new_produto.imagem
+            nome=new_produto.nome,
+            preco=new_produto.preco,
+            quantidade=new_produto.quantidade,
+            status=new_produto.status,
+            imagem=new_produto.imagem
         )
-
 
         db.session.add(produto)
         db.session.commit()
-        return produto 
-    
+        return produto
 
     @staticmethod
     def listar_produtos():
         return db.session.query(Produto).all()
-    
 
     @staticmethod
     def atualizar_produtos(id, nome=None, preco=None, quantidade=None, imagem=None):
@@ -35,30 +33,24 @@ class ProdutoService:
         
         if not new_produto:
             return None  
-        
-       
+
         if nome:
             new_produto.nome = nome
-        
         if preco:
             new_produto.preco = preco
-        
         if quantidade:
             new_produto.quantidade = quantidade
-        
         if imagem:
-            if hasattr(imagem, 'filename'):  # É um FileStorage?
+            if hasattr(imagem, 'filename'):  # Se for um arquivo
                 filename = secure_filename(imagem.filename)
                 filepath = os.path.join('static/uploads', filename)
                 imagem.save(filepath)
                 new_produto.imagem = filepath
             else:
-               
                 new_produto.imagem = imagem
-        
+
         db.session.commit()
         return new_produto
-    
 
     @staticmethod
     def inativar_produto(id):
@@ -69,9 +61,7 @@ class ProdutoService:
     
         produto.status = False  
         db.session.commit()
-    
         return produto
-    
 
     @staticmethod
     def ativar_produto(id):
@@ -82,20 +72,17 @@ class ProdutoService:
         
         produto.status = True  
         db.session.commit()
-        
         return produto
-    
 
     @staticmethod
     def excluir_produto(id):
-        produto = Produto.query.filter_by(id = id).first()
+        produto = Produto.query.filter_by(id=id).first()
 
         if not produto:
             return None
         
         db.session.delete(produto)
         db.session.commit()
-
         return True
 
     @staticmethod
@@ -111,16 +98,18 @@ class ProdutoService:
         if produto.quantidade < quantidade_venda:
             return None, "Estoque insuficiente!"
 
+        # Diminui o estoque
         produto.quantidade -= quantidade_venda
+
+        # Cria registro da venda
+        nova_venda = Venda(
+            produto_id=produto.id,
+            quantidade=quantidade_venda,
+            preco_unitario=produto.preco,
+            preco_total=produto.preco * quantidade_venda
+        )
+
+        db.session.add(nova_venda)
         db.session.commit()
 
-        return produto, None
-    
-
-
-    
-
-
-
-
-
+        return nova_venda, None

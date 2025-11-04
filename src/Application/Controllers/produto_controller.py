@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from src.Infrastructure.Model.produto import Produto
 from src.Application.Service.produto_service import ProdutoService
 import os
@@ -17,7 +17,6 @@ class ProdutoController:
         if not all([nome, preco, quantidade]):
             return jsonify({"erro": "Campos obrigatórios faltando."}), 400
 
-        
         upload_folder = os.path.join(current_app.root_path, "static", "uploads")
         os.makedirs(upload_folder, exist_ok=True)
 
@@ -47,7 +46,7 @@ class ProdutoController:
         if produtos:
             return jsonify([produto.to_dict_product() for produto in produtos])
         
-        return jsonify({"message": "Produtos não encontrados"})
+        return jsonify({"message": "Produtos não encontrados"}), 404
     
 
     @staticmethod
@@ -69,17 +68,19 @@ class ProdutoController:
 
     @staticmethod
     def vender(id):
-        quantidade_venda = int(request.json.get("quantidade_venda", 1))
+        """Registrar uma venda de produto"""
+        data = request.get_json()
+        quantidade_venda = int(data.get("quantidade_venda", 1))
 
-        produto, erro = ProdutoService.vender_produto(id, quantidade_venda)
+        venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
 
         if erro:
             return jsonify({"erro": erro}), 400
 
         return jsonify({
-            "message": "Venda realizada com sucesso!",
-            "produto": produto.to_dict_product()
-        }), 200
+            "mensagem": "Venda registrada com sucesso!",
+            "venda": venda.to_dict_venda()
+        }), 201
     
 
     @staticmethod
@@ -95,7 +96,6 @@ class ProdutoController:
         
         return jsonify({"erro": "Produto não encontrado"}), 404
     
-
 
     @staticmethod
     def ativar_produto(id):
@@ -113,14 +113,9 @@ class ProdutoController:
 
     @staticmethod
     def deletar_produto(id):
-
         produto = ProdutoService.excluir_produto(id)
 
         if produto:
             return jsonify({"message": "Produto excluído com sucesso"}), 200
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
-
-
-
-
