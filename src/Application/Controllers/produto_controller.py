@@ -51,13 +51,13 @@ class ProdutoController:
 
     @staticmethod
     def att_produto(id):
-        data = request.get_json()
-        nome = data.get("nome")
-        preco = data.get("preco")
-        quantidade = data.get("quantidade")
+        nome = request.form.get("nome")
+        preco = request.form.get("preco")
+        quantidade = request.form.get("quantidade")
+        imagem = request.files.get("imagem")
 
         produto = ProdutoService.atualizar_produtos(
-            id, nome=nome, preco=preco, quantidade=quantidade
+            id, nome=nome, preco=preco, quantidade=quantidade, imagem=imagem
         )
 
         if not produto:

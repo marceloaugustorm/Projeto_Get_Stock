@@ -23,7 +23,8 @@ def create_app():
     # })
     
   
-    app.config["JWT_SECRET_KEY"] = "flaroque"  
+    app.config["JWT_SECRET_KEY"] = "flaroque" 
+     
     jwt = JWTManager(app)  
 
 

@@ -6,19 +6,19 @@ class Venda(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'), nullable=False)
-    quantidade_vendida = db.Column(db.Integer, nullable=False)
-    preco_no_momento = db.Column(db.Float, nullable=False)
-    data_venda = db.Column(db.DateTime, default=datetime.utcnow)
+    quantidade = db.Column(db.Integer, nullable=False)
+    preco_unitario = db.Column(db.Float, nullable=False)
+    preco_total = db.Column(db.Float, nullable=False)
 
     # Relacionamento
     produto = db.relationship('Produto', backref='vendas')
 
-    def to_dict(self):
+    def to_dict_venda(self):
         return {
             "id": self.id,
             "produto_id": self.produto_id,
-            "quantidade_vendida": self.quantidade_vendida,
-            "preco_no_momento": self.preco_no_momento,
-            "data_venda": self.data_venda,
+            "quantidade_vendida": self.quantidade,
+            "preco_no_momento": self.preco_unitario,
+            "preco_total": self.preco_total,
             "produto_nome": self.produto.nome if self.produto else None
         }

@@ -6,7 +6,7 @@ from src.Infrastructure.http.whats_app import WhatsAppService
 import os 
 
 account_sid = "AC739251f716815e12764015f1808d1ce1"
-auth_token = "d670018102f5d2fd131010b7f404f621"
+auth_token = "4554fe3ee1bff0f42ccb33ceec1ee23f"
 from_whatsapp_number = "whatsapp:+14155238886"
 
 
