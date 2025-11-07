@@ -22,6 +22,12 @@ def init_routes(app):
     @app.route('/verifica', methods=['POST'])
     def verify():
         return UserController.verify_user()
+
+    @app.route('/dashboard', methods=['GET'])
+    @jwt_required()  # Se quiser que só usuários autenticados acessem
+    def dashboard_produto():
+        return ProdutoController.dashboard()
+
     
     
     @app.route('/user/<int:id>',methods = ['PUT'])
