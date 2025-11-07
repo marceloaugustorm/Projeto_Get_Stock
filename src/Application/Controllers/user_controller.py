@@ -69,7 +69,11 @@ class UserController:
         user, msg = UserService.verifica_user(email, password)
 
         if user:
-            return jsonify({"message": "Usuário Logado"}), 200
+            access_token = create_access_token(identity=str(user.id))
+            return jsonify({
+                "access_token": access_token,
+                "message": "Usuário logado com sucesso!"
+            }), 200
         else:
             return jsonify({"message": msg}), 401
     

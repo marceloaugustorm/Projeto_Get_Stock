@@ -3,14 +3,45 @@ from src.Infrastructure.Model.produto import Produto
 from src.Infrastructure.Model.venda import Venda
 from werkzeug.utils import secure_filename
 from src.config.data_base import db
+import pandas as pd
 import os
 
 
 class ProdutoService:
     @staticmethod
     def criar_produto(nome, preco, quantidade, status, imagem):
-        new_produto = ProdutoDomain(nome, preco, quantidade, status, imagem)
 
+        if not nome or not preco or not quantidade:
+            raise ValueError("Campos obrigatórios ausentes (nome, preco ou quantidade)")
+
+        try:
+            preco_original = preco
+            quantidade_original = quantidade
+            status_original = status
+
+            preco = float(preco)
+            quantidade = int(quantidade)
+
+    
+            if isinstance(status, str):
+                status = status.lower() in ['true', '1', 't', 'yes']
+            else:
+                status = bool(status)
+
+            print(f"Convertidos: preco={preco} (de {preco_original}), quantidade={quantidade} (de {quantidade_original}), status={status} (de {status_original})")
+
+        except ValueError as e:
+            raise ValueError(f"Erro de conversão de tipos: {e}")
+
+        if imagem:
+            print(f"Caminho da imagem recebido: {imagem}")
+        else:
+            print("Nenhuma imagem enviada.")
+
+        new_produto = ProdutoDomain(nome, preco, quantidade, status, imagem)
+        print("✅ ProdutoDomain criado com sucesso.")
+
+        
         produto = Produto(
             nome=new_produto.nome,
             preco=new_produto.preco,
@@ -18,10 +49,20 @@ class ProdutoService:
             status=new_produto.status,
             imagem=new_produto.imagem
         )
+        print("✅ Produto (Model) instanciado com sucesso.")
 
-        db.session.add(produto)
-        db.session.commit()
+        try:
+            db.session.add(produto)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+
+            raise e
+
         return produto
+
+
+    
     @staticmethod
     def obter_dados_dashboard():
         """Combina dados de produtos e vendas para o dashboard"""
@@ -59,7 +100,7 @@ class ProdutoService:
 
     @staticmethod
     def listar_produtos():
-        return db.session.query(Produto).all()
+        return Produto.query.filter_by(status=True).all()
 
     @staticmethod
     def atualizar_produtos(id, nome=None, preco=None, quantidade=None, imagem=None):
@@ -110,29 +151,33 @@ class ProdutoService:
 
     @staticmethod
     def excluir_produto(id):
-        produto = Produto.query.filter_by(id=id).first()
-
+        produto = Produto.query.get(id)
         if not produto:
             return None
         
-        db.session.delete(produto)
+        # Soft delete
+        produto.status = False
         db.session.commit()
-        return True
+        return produto
 
     @staticmethod
     def vender_produto(id, quantidade_venda):
         produto = Produto.query.filter_by(id=id).first()
-        
+
         if not produto:
             return None, "Produto não encontrado"
 
         if not produto.status:
-            return None, "Produto inativo!"
+            return None, "Produto inativo"
+
+        try:
+            quantidade_venda = int(quantidade_venda)
+        except ValueError:
+            return None, "Quantidade inválida"
 
         if produto.quantidade < quantidade_venda:
-            return None, "Estoque insuficiente!"
+            return None, "Estoque insuficiente"
 
-       
         produto.quantidade -= quantidade_venda
 
         nova_venda = Venda(
@@ -146,3 +191,4 @@ class ProdutoService:
         db.session.commit()
 
         return nova_venda, None
+

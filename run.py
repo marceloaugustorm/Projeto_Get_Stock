@@ -3,6 +3,7 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from src.config.data_base import init_db, db
 from src.routes import init_routes
+from datetime import timedelta
 from src.Infrastructure.Model.user import User
 import os  
 
@@ -14,16 +15,9 @@ def create_app():
 
     CORS(app)
 
-    # CORS(app, resources={
-    #     r"/*": {
-    #         "origins": ["http://10.0.0.41:5000/"],
-    #         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    #         "allow_headers": ["Content-Type", "Authorization"]
-    #     }
-    # })
-    
   
-    app.config["JWT_SECRET_KEY"] = "flaroque" 
+    app.config["JWT_SECRET_KEY"] = "flaroque"
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=12) 
      
     jwt = JWTManager(app)  
 

@@ -10,8 +10,7 @@ class Venda(db.Model):
     preco_unitario = db.Column(db.Float, nullable=False)
     preco_total = db.Column(db.Float, nullable=False)
 
-    # Relacionamento
-    produto = db.relationship('Produto', backref='vendas')
+    produto = db.relationship('Produto', back_populates='vendas_relacionadas')
 
     def to_dict_venda(self):
         return {

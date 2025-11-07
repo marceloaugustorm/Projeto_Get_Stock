@@ -2,6 +2,10 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from src.Infrastructure.Model.produto import Produto
 from src.Application.Service.produto_service import ProdutoService
+from src.Infrastructure.Model.venda import Venda
+import matplotlib
+matplotlib.use('Agg')  
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import io
@@ -14,8 +18,11 @@ class ProdutoController:
         nome = request.form.get("nome")
         preco = request.form.get("preco")
         quantidade = request.form.get("quantidade")
-        status = request.form.get("status")
+        status_str = request.form.get("status", "True")
+        status = True if status_str.lower() == "true" else False
         imagem = request.files.get("imagem")
+
+
         
         if not all([nome, preco, quantidade]):
             return jsonify({"erro": "Campos obrigatórios faltando."}), 400
@@ -39,51 +46,49 @@ class ProdutoController:
             "quantidade": produto.quantidade,
             "status": produto.status,
             "imagem": produto.imagem
+            
         }), 201
     
 
     @staticmethod
     def list_product():
         produtos = ProdutoService.listar_produtos()
-
-        if produtos:
-            return jsonify([produto.to_dict_product() for produto in produtos])
-        
-        return jsonify({"message": "Produtos não encontrados"}), 404
+        return jsonify([produto.to_dict_product() for produto in produtos]), 200
     
 
     @staticmethod
     def att_produto(id):
-        nome = request.form.get("nome")
-        preco = request.form.get("preco")
-        quantidade = request.form.get("quantidade")
-        imagem = request.files.get("imagem")
+        data = request.get_json()
+
+        nome = data.get("nome")
+        preco = data.get("preco")
+        quantidade = data.get("quantidade")
 
         produto = ProdutoService.atualizar_produtos(
-            id, nome=nome, preco=preco, quantidade=quantidade, imagem=imagem
+            id, nome=nome, preco=preco, quantidade=quantidade
         )
 
         if not produto:
             return jsonify({"erro": "Produto não encontrado"}), 404
-        
+
         return jsonify(produto.to_dict_product()), 200
 
 
     @staticmethod
     def vender(id):
-    """Registrar uma venda de produto"""
-    data = request.get_json()
-    quantidade_venda = int(data.get("quantidade_venda", 1))
+        """Registrar uma venda de produto"""
+        data = request.get_json()
+        quantidade_venda = int(data.get("quantidade_venda", 1))
 
-    venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
+        venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
 
-    if erro:
-        return jsonify({"erro": erro}), 400
+        if erro:
+            return jsonify({"erro": erro}), 400
 
-    return jsonify({
-        "mensagem": "Venda registrada com sucesso!",
-        "venda": venda.to_dict_venda()
-    }), 201
+        return jsonify({
+            "mensagem": "Venda registrada com sucesso!",
+            "venda": venda.to_dict_venda()
+        }), 201
     
 
     @staticmethod
@@ -123,40 +128,43 @@ class ProdutoController:
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
 
-  @staticmethod
-  def dashboard():
+    @staticmethod
+    def dashboard():
         """Dashboard completo com estatísticas de produtos e vendas"""
         produtos = ProdutoService.listar_produtos()
         if not produtos:
             return jsonify({"erro": "Nenhum produto encontrado"}), 404
 
+        
         df_prod = pd.DataFrame([p.to_dict_product() for p in produtos])
         df_prod['preco'] = df_prod['preco'].astype(float)
         df_prod['quantidade'] = df_prod['quantidade'].astype(int)
 
-        total_produtos = len(df_prod)
-        total_ativos = len(df_prod[df_prod['status'] == 'ativo'])
-        total_inativos = len(df_prod[df_prod['status'] == 'inativo'])
-        valor_total_estoque = (df_prod['preco'] * df_prod['quantidade']).sum()
+        total_produtos = int(len(df_prod))
+        total_ativos = int(len(df_prod[df_prod['status'] == 'ativo']))
+        total_inativos = int(len(df_prod[df_prod['status'] == 'inativo']))
+        valor_total_estoque = float(round((df_prod['preco'] * df_prod['quantidade']).sum(), 2))
 
+        
         vendas = Venda.query.all()
         if vendas:
             df_vendas = pd.DataFrame([v.to_dict_venda() for v in vendas])
             df_vendas['preco_total'] = df_vendas['preco_total'].astype(float)
             df_vendas['quantidade_vendida'] = df_vendas['quantidade_vendida'].astype(int)
 
-            total_vendas = df_vendas['quantidade_vendida'].sum()
-            faturamento_total = df_vendas['preco_total'].sum()
+            total_vendas = int(df_vendas['quantidade_vendida'].sum())
+            faturamento_total = float(round(df_vendas['preco_total'].sum(), 2))
 
+            
             ranking_vendas = (
                 df_vendas.groupby('produto_nome')
                 .agg({'quantidade_vendida': 'sum', 'preco_total': 'sum'})
                 .sort_values(by='quantidade_vendida', ascending=False)
                 .reset_index()
             )
-
             produto_mais_vendido = ranking_vendas.iloc[0]['produto_nome'] if not ranking_vendas.empty else None
 
+            
             plt.figure(figsize=(4, 3))
             df_prod['status'].value_counts().plot(kind='bar', color=['green', 'red'])
             plt.title('Produtos Ativos x Inativos')
@@ -169,12 +177,13 @@ class ProdutoController:
             grafico_status = base64.b64encode(buf1.getvalue()).decode('utf-8')
             plt.close()
 
+            
             plt.figure(figsize=(5, 4))
             plt.barh(ranking_vendas['produto_nome'], ranking_vendas['quantidade_vendida'], color='skyblue')
             plt.title('Ranking de Produtos Mais Vendidos')
             plt.xlabel('Quantidade Vendida')
             plt.ylabel('Produto')
-            plt.gca().invert_yaxis() 
+            plt.gca().invert_yaxis()
             buf2 = io.BytesIO()
             plt.tight_layout()
             plt.savefig(buf2, format='png')
@@ -184,10 +193,11 @@ class ProdutoController:
 
         else:
             total_vendas = 0
-            faturamento_total = 0
+            faturamento_total = 0.0
             produto_mais_vendido = None
             grafico_vendas = None
 
+            
             plt.figure(figsize=(4, 3))
             df_prod['status'].value_counts().plot(kind='bar', color=['green', 'red'])
             plt.title('Produtos Ativos x Inativos')
@@ -200,13 +210,12 @@ class ProdutoController:
             grafico_status = base64.b64encode(buf1.getvalue()).decode('utf-8')
             plt.close()
 
+        
         return jsonify({
             "total_produtos": total_produtos,
-            "ativos": total_ativos,
-            "inativos": total_inativos,
-            "valor_total_estoque": round(valor_total_estoque, 2),
+            "valor_total_estoque": valor_total_estoque,
             "total_vendas": total_vendas,
-            "faturamento_total": round(faturamento_total, 2),
+            "faturamento_total": faturamento_total,
             "produto_mais_vendido": produto_mais_vendido,
             "grafico_status": f"data:image/png;base64,{grafico_status}",
             "grafico_vendas": f"data:image/png;base64,{grafico_vendas}" if grafico_vendas else None

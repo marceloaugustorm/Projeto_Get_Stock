@@ -55,16 +55,16 @@ def init_routes(app):
         return ProdutoController.att_produto(id)
     
 
-    @app.route('/ativar/<int:id>', methods = ['PATCH'])
+    @app.route('/produto/ativar/<int:id>', methods=['PATCH'])
     @jwt_required()
     def ativar_product(id):
         return ProdutoController.ativar_produto(id)
-    
-    @app.route('/desativar/<int:id>', methods = ['PATCH'])
+
+    @app.route('/produto/desativar/<int:id>', methods=['PATCH'])
     @jwt_required()
     def desativar_product(id):
         return ProdutoController.inativar_produto(id)
-    
+        
 
     @app.route('/produto/<int:id>', methods = ['DELETE'])
     @jwt_required()
@@ -76,7 +76,7 @@ def init_routes(app):
     def vender_produto(id):
         return ProdutoController.vender(id)
 
-    @app.route('/dashboard', methods=['GET'])
+    @app.route('/produto/dashboard', methods=['GET'])
     @jwt_required()
     def dashboard():
-        return DashboardController.get_dashboard_data()
+        return ProdutoController.dashboard()

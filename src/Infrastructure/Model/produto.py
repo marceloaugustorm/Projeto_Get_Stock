@@ -10,6 +10,8 @@ class Produto(db.Model):
     imagem = db.Column(db.String(255)) 
 
 
+    vendas_relacionadas = db.relationship('Venda', back_populates='produto')
+
     def to_dict_product(self):
         return {
             "id": self.id,
