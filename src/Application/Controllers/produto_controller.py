@@ -3,7 +3,10 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from src.Infrastructure.Model.produto import Produto
 from src.Application.Service.produto_service import ProdutoService
 import os
-
+import pandas as pd
+import io
+import base64
+import matplotlib.pyplot as plt
 
 class ProdutoController:
     @staticmethod
@@ -119,3 +122,39 @@ class ProdutoController:
             return jsonify({"message": "Produto excluído com sucesso"}), 200
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
+
+   @staticmethod
+def dashboard():
+    """Dashboard analítico de produtos"""
+    produtos = ProdutoService.listar_produtos()
+    if not produtos:
+        return jsonify({"erro": "Nenhum produto encontrado"}), 404
+
+    df = pd.DataFrame([p.to_dict_product() for p in produtos])
+
+    total_produtos = len(df)
+    total_ativos = len(df[df['status'] == 'ativo'])
+    total_inativos = len(df[df['status'] == 'inativo'])
+    valor_total_estoque = (df['preco'].astype(float) * df['quantidade'].astype(int)).sum()
+
+    plt.figure(figsize=(4, 3))
+    df['status'].value_counts().plot(kind='bar', color=['green', 'red'])
+    plt.title('Produtos Ativos x Inativos')
+    plt.xlabel('Status')
+    plt.ylabel('Quantidade')
+
+    buf = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    plt.close()
+
+    return jsonify({
+        "total_produtos": total_produtos,
+        "ativos": total_ativos,
+        "inativos": total_inativos,
+        "valor_total_estoque": round(valor_total_estoque, 2),
+        "grafico_status": f"data:image/png;base64,{img_base64}"
+    })
+
