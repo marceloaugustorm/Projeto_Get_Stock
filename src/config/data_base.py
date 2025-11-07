@@ -7,9 +7,10 @@ def init_db(app):
     """
     Inicializa a base de dados com o app Flask e o SQLAlchemy.
     """
-    base_dir = os.path.abspath(os.path.dirname(__file__))  
-    db_path = os.path.join(base_dir, "market_management.db")  
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise Exception("Variável de ambiente DATABASE_URL não definida")
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
