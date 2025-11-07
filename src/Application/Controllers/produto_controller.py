@@ -5,7 +5,6 @@ from src.Application.Service.produto_service import ProdutoService
 from src.Infrastructure.Model.venda import Venda
 import matplotlib
 matplotlib.use('Agg')  
-import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import io
