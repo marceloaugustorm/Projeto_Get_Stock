@@ -71,19 +71,19 @@ class ProdutoController:
 
     @staticmethod
     def vender(id):
-        """Registrar uma venda de produto"""
-        data = request.get_json()
-        quantidade_venda = int(data.get("quantidade_venda", 1))
+    """Registrar uma venda de produto"""
+    data = request.get_json()
+    quantidade_venda = int(data.get("quantidade_venda", 1))
 
-        venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
+    venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
 
-        if erro:
-            return jsonify({"erro": erro}), 400
+    if erro:
+        return jsonify({"erro": erro}), 400
 
-        return jsonify({
-            "mensagem": "Venda registrada com sucesso!",
-            "venda": venda.to_dict_venda()
-        }), 201
+    return jsonify({
+        "mensagem": "Venda registrada com sucesso!",
+        "venda": venda.to_dict_venda()
+    }), 201
     
 
     @staticmethod
