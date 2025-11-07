@@ -123,38 +123,91 @@ class ProdutoController:
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
 
-   @staticmethod
-def dashboard():
-    """Dashboard analítico de produtos"""
-    produtos = ProdutoService.listar_produtos()
-    if not produtos:
-        return jsonify({"erro": "Nenhum produto encontrado"}), 404
+  @staticmethod
+  def dashboard():
+        """Dashboard completo com estatísticas de produtos e vendas"""
+        produtos = ProdutoService.listar_produtos()
+        if not produtos:
+            return jsonify({"erro": "Nenhum produto encontrado"}), 404
 
-    df = pd.DataFrame([p.to_dict_product() for p in produtos])
+        df_prod = pd.DataFrame([p.to_dict_product() for p in produtos])
+        df_prod['preco'] = df_prod['preco'].astype(float)
+        df_prod['quantidade'] = df_prod['quantidade'].astype(int)
 
-    total_produtos = len(df)
-    total_ativos = len(df[df['status'] == 'ativo'])
-    total_inativos = len(df[df['status'] == 'inativo'])
-    valor_total_estoque = (df['preco'].astype(float) * df['quantidade'].astype(int)).sum()
+        total_produtos = len(df_prod)
+        total_ativos = len(df_prod[df_prod['status'] == 'ativo'])
+        total_inativos = len(df_prod[df_prod['status'] == 'inativo'])
+        valor_total_estoque = (df_prod['preco'] * df_prod['quantidade']).sum()
 
-    plt.figure(figsize=(4, 3))
-    df['status'].value_counts().plot(kind='bar', color=['green', 'red'])
-    plt.title('Produtos Ativos x Inativos')
-    plt.xlabel('Status')
-    plt.ylabel('Quantidade')
+        vendas = Venda.query.all()
+        if vendas:
+            df_vendas = pd.DataFrame([v.to_dict_venda() for v in vendas])
+            df_vendas['preco_total'] = df_vendas['preco_total'].astype(float)
+            df_vendas['quantidade_vendida'] = df_vendas['quantidade_vendida'].astype(int)
 
-    buf = io.BytesIO()
-    plt.tight_layout()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-    plt.close()
+            total_vendas = df_vendas['quantidade_vendida'].sum()
+            faturamento_total = df_vendas['preco_total'].sum()
 
-    return jsonify({
-        "total_produtos": total_produtos,
-        "ativos": total_ativos,
-        "inativos": total_inativos,
-        "valor_total_estoque": round(valor_total_estoque, 2),
-        "grafico_status": f"data:image/png;base64,{img_base64}"
-    })
+            ranking_vendas = (
+                df_vendas.groupby('produto_nome')
+                .agg({'quantidade_vendida': 'sum', 'preco_total': 'sum'})
+                .sort_values(by='quantidade_vendida', ascending=False)
+                .reset_index()
+            )
 
+            produto_mais_vendido = ranking_vendas.iloc[0]['produto_nome'] if not ranking_vendas.empty else None
+
+            plt.figure(figsize=(4, 3))
+            df_prod['status'].value_counts().plot(kind='bar', color=['green', 'red'])
+            plt.title('Produtos Ativos x Inativos')
+            plt.xlabel('Status')
+            plt.ylabel('Quantidade')
+            buf1 = io.BytesIO()
+            plt.tight_layout()
+            plt.savefig(buf1, format='png')
+            buf1.seek(0)
+            grafico_status = base64.b64encode(buf1.getvalue()).decode('utf-8')
+            plt.close()
+
+            plt.figure(figsize=(5, 4))
+            plt.barh(ranking_vendas['produto_nome'], ranking_vendas['quantidade_vendida'], color='skyblue')
+            plt.title('Ranking de Produtos Mais Vendidos')
+            plt.xlabel('Quantidade Vendida')
+            plt.ylabel('Produto')
+            plt.gca().invert_yaxis() 
+            buf2 = io.BytesIO()
+            plt.tight_layout()
+            plt.savefig(buf2, format='png')
+            buf2.seek(0)
+            grafico_vendas = base64.b64encode(buf2.getvalue()).decode('utf-8')
+            plt.close()
+
+        else:
+            total_vendas = 0
+            faturamento_total = 0
+            produto_mais_vendido = None
+            grafico_vendas = None
+
+            plt.figure(figsize=(4, 3))
+            df_prod['status'].value_counts().plot(kind='bar', color=['green', 'red'])
+            plt.title('Produtos Ativos x Inativos')
+            plt.xlabel('Status')
+            plt.ylabel('Quantidade')
+            buf1 = io.BytesIO()
+            plt.tight_layout()
+            plt.savefig(buf1, format='png')
+            buf1.seek(0)
+            grafico_status = base64.b64encode(buf1.getvalue()).decode('utf-8')
+            plt.close()
+
+        return jsonify({
+            "total_produtos": total_produtos,
+            "ativos": total_ativos,
+            "inativos": total_inativos,
+            "valor_total_estoque": round(valor_total_estoque, 2),
+            "total_vendas": total_vendas,
+            "faturamento_total": round(faturamento_total, 2),
+            "produto_mais_vendido": produto_mais_vendido,
+            "grafico_status": f"data:image/png;base64,{grafico_status}",
+            "grafico_vendas": f"data:image/png;base64,{grafico_vendas}" if grafico_vendas else None
+        })
