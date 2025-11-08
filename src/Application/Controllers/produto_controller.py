@@ -3,9 +3,11 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from src.Infrastructure.Model.produto import Produto
 from src.Application.Service.produto_service import ProdutoService
 from src.Infrastructure.Model.venda import Venda
+from supabase import create_client
 import matplotlib
 matplotlib.use('Agg')  
 import os
+import uuid
 import pandas as pd
 import io
 import base64
@@ -21,22 +23,36 @@ class ProdutoController:
         status = True if status_str.lower() == "true" else False
         imagem = request.files.get("imagem")
 
-
-        
         if not all([nome, preco, quantidade]):
             return jsonify({"erro": "Campos obrigatórios faltando."}), 400
 
-        upload_folder = os.path.join(current_app.root_path, "static", "uploads")
-        os.makedirs(upload_folder, exist_ok=True)
-
-        imagem_path = None
+        imagem_url = None
         if imagem:
-            filename = imagem.filename
-            save_path = os.path.join(upload_folder, filename)
-            imagem.save(save_path)
-            imagem_path = os.path.join("static", "uploads", filename)
+            try:
+                # 🔧 Conecta ao Supabase
+                supabase = create_client(
+                    os.getenv("SUPABASE_URL"),
+                    os.getenv("SUPABASE_KEY")
+                )
 
-        produto = ProdutoService.criar_produto(nome, preco, quantidade, status, imagem_path)
+                # 🧩 Nome único para evitar conflito
+                file_extension = imagem.filename.split('.')[-1]
+                unique_filename = f"{uuid.uuid4()}.{file_extension}"
+                bucket_path = f"produtos/{unique_filename}"
+
+                # ☁️ Faz upload para o bucket "imagens"
+                supabase.storage.from_("imagens").upload(bucket_path, imagem)
+
+                # 🔗 Gera URL pública
+                imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/imagens/{bucket_path}"
+
+            except Exception as e:
+                return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
+
+        # Cria produto com URL da imagem (ou None)
+        produto = ProdutoService.criar_produto(
+            nome, preco, quantidade, status, imagem_url
+        )
 
         return jsonify({
             "id": produto.id,
@@ -45,7 +61,6 @@ class ProdutoController:
             "quantidade": produto.quantidade,
             "status": produto.status,
             "imagem": produto.imagem
-            
         }), 201
     
 
