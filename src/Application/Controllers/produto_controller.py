@@ -230,6 +230,8 @@ class ProdutoController:
     @staticmethod
     def vender_produto(id):
         try:
+            user_id = get_jwt_identity()  # pega o usuário logado
+
             if request.is_json:
                 data = request.get_json()
                 quantidade_venda = data.get("quantidade_venda")
@@ -241,18 +243,14 @@ class ProdutoController:
 
             quantidade_venda = int(quantidade_venda)
 
-            nova_venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
+            # PASSAR user_id para o service
+            nova_venda, erro = ProdutoService.vender_produto(id, quantidade_venda, user_id)
 
             if erro:
                 return jsonify({"erro": erro}), 400
 
-            # converter para dict antes de enviar
-            venda_dict = {
-                "id": nova_venda.id,
-                "produto_id": nova_venda.produto_id,
-                "quantidade": nova_venda.quantidade,
-                "data_venda": nova_venda.data_venda.strftime("%Y-%m-%d %H:%M:%S")
-            }
+            # usar método do model para converter para dict
+            venda_dict = nova_venda.to_dict_venda()
 
             return jsonify({"sucesso": "Produto vendido com sucesso!", "nova_venda": venda_dict})
 
@@ -260,7 +258,6 @@ class ProdutoController:
             return jsonify({"erro": "Quantidade inválida"}), 400
         except Exception as e:
             return jsonify({"erro": str(e)}), 500
-
 
  
 

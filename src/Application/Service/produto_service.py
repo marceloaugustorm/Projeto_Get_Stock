@@ -149,7 +149,7 @@ class ProdutoService:
         return produto
 
     @staticmethod
-    def vender_produto(id, quantidade_venda):
+    def vender_produto(id, quantidade_venda, user_id):
         produto = Produto.query.filter_by(id=id).first()
 
         if not produto:
@@ -172,7 +172,8 @@ class ProdutoService:
             produto_id=produto.id,
             quantidade=quantidade_venda,
             preco_unitario=produto.preco,
-            preco_total=produto.preco * quantidade_venda
+            preco_total=produto.preco * quantidade_venda,
+             user_id=user_id
         )
 
         db.session.add(nova_venda)
