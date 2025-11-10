@@ -9,94 +9,64 @@ import os
 
 class ProdutoService:
     @staticmethod
-    def criar_produto(nome, preco, quantidade, status, imagem):
-
-        if not nome or not preco or not quantidade:
-            raise ValueError("Campos obrigatórios ausentes (nome, preco ou quantidade)")
-
+    def criar_produto(nome, preco, quantidade, status, imagem_url, user_id):  # ← Adicione user_id
+        """
+        Cria um novo produto vinculado ao usuário.
+        """
         try:
-            preco_original = preco
-            quantidade_original = quantidade
-            status_original = status
-
-            preco = float(preco)
-            quantidade = int(quantidade)
-
-    
-            if isinstance(status, str):
-                status = status.lower() in ['true', '1', 't', 'yes']
-            else:
-                status = bool(status)
-
-            print(f"Convertidos: preco={preco} (de {preco_original}), quantidade={quantidade} (de {quantidade_original}), status={status} (de {status_original})")
-
-        except ValueError as e:
-            raise ValueError(f"Erro de conversão de tipos: {e}")
-
-        if imagem:
-            print(f"Caminho da imagem recebido: {imagem}")
-        else:
-            print("Nenhuma imagem enviada.")
-
-        new_produto = ProdutoDomain(nome, preco, quantidade, status, imagem)
-        print("✅ ProdutoDomain criado com sucesso.")
-
-        
-        produto = Produto(
-            nome=new_produto.nome,
-            preco=new_produto.preco,
-            quantidade=new_produto.quantidade,
-            status=new_produto.status,
-            imagem=new_produto.imagem
-        )
-        print("✅ Produto (Model) instanciado com sucesso.")
-
-        try:
+            produto = Produto(
+                nome=nome,
+                preco=preco,
+                quantidade=quantidade,
+                status=status,
+                imagem=imagem_url,
+                user_id=user_id  # ← ADICIONE ESTA LINHA
+            )
+            
             db.session.add(produto)
             db.session.commit()
+            
+            return produto
+            
         except Exception as e:
             db.session.rollback()
+            raise Exception(f"Erro ao criar produto: {str(e)}")
 
-            raise e
+        
+        @staticmethod
+        def obter_dados_dashboard():
+            """Combina dados de produtos e vendas para o dashboard"""
 
-        return produto
+            produtos = Produto.query.all()
+            if not produtos:
+                return None
 
+            df_produtos = pd.DataFrame([p.to_dict_product() for p in produtos])
 
-    
-    @staticmethod
-    def obter_dados_dashboard():
-        """Combina dados de produtos e vendas para o dashboard"""
+            vendas = Venda.query.all()
+            if vendas:
+                df_vendas = pd.DataFrame([v.to_dict_venda() for v in vendas])
+            else:
+                df_vendas = pd.DataFrame(columns=["id_produto", "quantidade", "valor_total"])
 
-        produtos = Produto.query.all()
-        if not produtos:
-            return None
+            # 🔹 Métricas de vendas
+            total_vendas = df_vendas["valor_total"].sum() if not df_vendas.empty else 0
+            produtos_vendidos = (
+                df_vendas.groupby("id_produto")["quantidade"].sum().reset_index()
+                if not df_vendas.empty
+                else pd.DataFrame(columns=["id_produto", "quantidade"])
+            )
 
-        df_produtos = pd.DataFrame([p.to_dict_product() for p in produtos])
+            ranking = []
+            if not produtos_vendidos.empty:
+                ranking = produtos_vendidos.sort_values(by="quantidade", ascending=False).head(5).to_dict(orient="records")
 
-        vendas = Venda.query.all()
-        if vendas:
-            df_vendas = pd.DataFrame([v.to_dict_venda() for v in vendas])
-        else:
-            df_vendas = pd.DataFrame(columns=["id_produto", "quantidade", "valor_total"])
-
-        # 🔹 Métricas de vendas
-        total_vendas = df_vendas["valor_total"].sum() if not df_vendas.empty else 0
-        produtos_vendidos = (
-            df_vendas.groupby("id_produto")["quantidade"].sum().reset_index()
-            if not df_vendas.empty
-            else pd.DataFrame(columns=["id_produto", "quantidade"])
-        )
-
-        ranking = []
-        if not produtos_vendidos.empty:
-            ranking = produtos_vendidos.sort_values(by="quantidade", ascending=False).head(5).to_dict(orient="records")
-
-        return {
-            "produtos": df_produtos,
-            "vendas": df_vendas,
-            "total_vendas": total_vendas,
-            "ranking": ranking
-        }
+            return {
+                "produtos": df_produtos,
+                "vendas": df_vendas,
+                "total_vendas": total_vendas,
+                "ranking": ranking
+            }
 
     @staticmethod
     def listar_produtos(user_id=None):

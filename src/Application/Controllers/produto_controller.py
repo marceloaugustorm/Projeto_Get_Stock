@@ -17,6 +17,9 @@ class ProdutoController:
     @staticmethod
     def register_produto():
         try:
+            # Pega o ID do usuário do token
+            user_id = get_jwt_identity()  # ← ADICIONE ESTA LINHA
+            
             # Obtém os campos do formulário
             nome = request.form.get("nome")
             preco = request.form.get("preco")
@@ -53,9 +56,9 @@ class ProdutoController:
                 except Exception as e:
                     return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
 
-            # Cria o produto no banco, enviando a URL da imagem
+            # Cria o produto no banco, enviando a URL da imagem E o user_id
             produto = ProdutoService.criar_produto(
-                nome, preco, quantidade, status, imagem_url
+                nome, preco, quantidade, status, imagem_url, user_id  # ← ADICIONE user_id
             )
 
             
@@ -65,9 +68,9 @@ class ProdutoController:
                 "preco": produto.preco,
                 "quantidade": produto.quantidade,
                 "status": produto.status,
-                "imagem": produto.imagem
+                "imagem": produto.imagem,
+                "user_id": produto.user_id  # ← Opcional, para debug
             }), 201
-
         except Exception as e:
             return jsonify({"erro": f"Erro ao cadastrar produto: {str(e)}"}), 500
     
