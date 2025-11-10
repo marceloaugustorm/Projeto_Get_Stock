@@ -92,29 +92,29 @@ class ProdutoService:
 
     @staticmethod
     def atualizar_produtos(id, nome=None, preco=None, quantidade=None, imagem=None):
-        new_produto = Produto.query.filter_by(id=id).first()
-        
-        if not new_produto:
-            return None  
+        """Atualiza um produto existente"""
+        try:
+            produto = Produto.query.get(id)
+            
+            if not produto:
+                return None  
 
-        if nome:
-            new_produto.nome = nome
-        if preco:
-            new_produto.preco = preco
-        if quantidade:
-            new_produto.quantidade = quantidade
-        if imagem:
-            if hasattr(imagem, 'filename'):  # Se for um arquivo
-                filename = secure_filename(imagem.filename)
-                filepath = os.path.join('static/uploads', filename)
-                imagem.save(filepath)
-                new_produto.imagem = filepath
-            else:
-                new_produto.imagem = imagem
+            # Atualiza apenas os campos fornecidos
+            if nome:
+                produto.nome = nome
+            if preco:
+                produto.preco = preco
+            if quantidade is not None:  # Permite quantidade = 0
+                produto.quantidade = quantidade
+            if imagem:
+                produto.imagem = imagem  # Recebe a URL diretamente
 
-        db.session.commit()
-        return new_produto
-
+            db.session.commit()
+            return produto
+            
+        except Exception as e:
+            db.session.rollback()
+            raise Exception(f"Erro ao atualizar produto: {str(e)}")
     @staticmethod
     def inativar_produto(id):
         produto = Produto.query.filter_by(id=id).first()
