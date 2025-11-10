@@ -44,7 +44,6 @@ def init_routes(app):
         return ProdutoController.register_produto()
     
     @app.route('/produto', methods = ['GET'])
-    @jwt_required()
     def listar_produto():
         return ProdutoController.list_product()
     

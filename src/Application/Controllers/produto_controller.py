@@ -58,7 +58,7 @@ class ProdutoController:
                 nome, preco, quantidade, status, imagem_url
             )
 
-            # Retorna resposta JSON completa
+            
             return jsonify({
                 "id": produto.id,
                 "nome": produto.nome,
@@ -121,12 +121,17 @@ class ProdutoController:
         return jsonify({"message": "Erro ao excluir produto"}), 404
     
     @staticmethod
+    @jwt_required()  
     def list_product():
         """
-        Retorna todos os produtos ativos.
+        Retorna todos os produtos do usuário logado.
         """
         try:
-            produtos = ProdutoService.listar_produtos()
+            user_id = get_jwt_identity()
+            
+            
+            produtos = ProdutoService.listar_produtos(user_id=user_id)
+            
             if not produtos:
                 return jsonify([]), 200  
 
@@ -147,6 +152,7 @@ class ProdutoController:
             import traceback
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao listar produtos: {str(e)}"}), 500
+
         
 
     @staticmethod
