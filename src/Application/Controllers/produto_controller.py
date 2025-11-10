@@ -29,27 +29,23 @@ class ProdutoController:
         imagem_url = None
         if imagem:
             try:
-                # 🔧 Conecta ao Supabase
                 supabase = create_client(
                     os.getenv("SUPABASE_URL"),
                     os.getenv("SUPABASE_KEY")
                 )
 
-                # 🧩 Nome único para evitar conflito
                 file_extension = imagem.filename.split('.')[-1]
                 unique_filename = f"{uuid.uuid4()}.{file_extension}"
-                bucket_path = f"produtos/{unique_filename}"
 
-                # ☁️ Faz upload para o bucket "imagens"
-                supabase.storage.from_("imagens").upload(bucket_path, imagem)
+                # Upload no bucket 'produtos'
+                supabase.storage.from_("produtos").upload(unique_filename, imagem)
 
-                # 🔗 Gera URL pública
-                imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/imagens/{bucket_path}"
+                # Gera link público
+                imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/produtos/{unique_filename}"
 
             except Exception as e:
                 return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
 
-        # Cria produto com URL da imagem (ou None)
         produto = ProdutoService.criar_produto(
             nome, preco, quantidade, status, imagem_url
         )
@@ -62,61 +58,7 @@ class ProdutoController:
             "status": produto.status,
             "imagem": produto.imagem
         }), 201
-    
 
-    @staticmethod
-    def list_product():
-        produtos = ProdutoService.listar_produtos()
-        return jsonify([produto.to_dict_product() for produto in produtos]), 200
-    
-
-    @staticmethod
-    def att_produto(id):
-        data = request.get_json()
-
-        nome = data.get("nome")
-        preco = data.get("preco")
-        quantidade = data.get("quantidade")
-
-        produto = ProdutoService.atualizar_produtos(
-            id, nome=nome, preco=preco, quantidade=quantidade
-        )
-
-        if not produto:
-            return jsonify({"erro": "Produto não encontrado"}), 404
-
-        return jsonify(produto.to_dict_product()), 200
-
-
-    @staticmethod
-    def vender(id):
-        """Registrar uma venda de produto"""
-        data = request.get_json()
-        quantidade_venda = int(data.get("quantidade_venda", 1))
-
-        venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
-
-        if erro:
-            return jsonify({"erro": erro}), 400
-
-        return jsonify({
-            "mensagem": "Venda registrada com sucesso!",
-            "venda": venda.to_dict_venda()
-        }), 201
-    
-
-    @staticmethod
-    def inativar_produto(id):
-        """Inativar produto"""
-        produto = ProdutoService.inativar_produto(id)
-        
-        if produto:
-            return jsonify({
-                "message": "Produto inativado com sucesso!",
-                "produto": produto.to_dict_product()
-            }), 200
-        
-        return jsonify({"erro": "Produto não encontrado"}), 404
     
 
     @staticmethod
