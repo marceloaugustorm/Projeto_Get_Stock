@@ -40,28 +40,25 @@ class ProdutoController:
                         os.getenv("SUPABASE_KEY")
                     )
 
-                    
+                    # Cria nome único para a imagem
                     file_extension = imagem.filename.split('.')[-1]
                     unique_filename = f"{uuid.uuid4()}.{file_extension}"
 
-                   
-                    file_data = imagem.read()
+                    # Faz upload para o bucket 'uploads'
+                    supabase.storage.from_("uploads").upload(unique_filename, imagem.read())
 
-                    
-                    supabase.storage.from_("uploads").upload(unique_filename, file_data)
-
-                    
-                    imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/produtos/{unique_filename}"
+                    # Gera URL pública correta
+                    imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/uploads/{unique_filename}"
 
                 except Exception as e:
                     return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
 
-            # Cria o produto no banco
+            # Cria o produto no banco, enviando a URL da imagem
             produto = ProdutoService.criar_produto(
                 nome, preco, quantidade, status, imagem_url
             )
 
-            # Retorna resposta JSON
+            # Retorna resposta JSON completa
             return jsonify({
                 "id": produto.id,
                 "nome": produto.nome,
