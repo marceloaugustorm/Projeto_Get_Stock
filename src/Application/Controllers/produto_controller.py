@@ -163,62 +163,56 @@ class ProdutoController:
     def att_produto(id):
         """
         Atualiza os dados de um produto pelo ID.
-        Recebe nome, preco, quantidade e imagem via form-data.
         """
         try:
-            # Verifica se o produto pertence ao usuário
             user_id = get_jwt_identity()
+            
+            # ✅ Converte para int
+            if isinstance(user_id, str):
+                user_id = int(user_id)
+            
             produto = Produto.query.get(id)
             
             if not produto:
                 return jsonify({"erro": "Produto não encontrado"}), 404
             
-            if produto.user_id != user_id:
+            if produto.user_id is not None and produto.user_id != user_id:
                 return jsonify({"erro": "Você não tem permissão para editar este produto"}), 403
             
-            # Obtém os dados do formulário
             nome = request.form.get("nome")
             preco = request.form.get("preco")
             quantidade = request.form.get("quantidade")
             imagem = request.files.get("imagem")
             
-            imagem_url = produto.imagem  # Mantém a imagem atual por padrão
+            imagem_url = produto.imagem
 
-            # Se uma nova imagem foi enviada, faz upload no Supabase
             if imagem:
                 try:
-                    # Inicializa o cliente Supabase
                     supabase = create_client(
                         os.getenv("SUPABASE_URL"),
                         os.getenv("SUPABASE_KEY")
                     )
 
-                    # Cria nome único para a imagem
                     file_extension = imagem.filename.split('.')[-1]
                     unique_filename = f"{uuid.uuid4()}.{file_extension}"
 
-                    # Faz upload para o bucket 'uploads'
                     supabase.storage.from_("uploads").upload(unique_filename, imagem.read())
-
-                    # Gera URL pública
                     imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/uploads/{unique_filename}"
 
                 except Exception as e:
                     return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
             
-            # Atualiza o produto
             produto_atualizado = ProdutoService.atualizar_produtos(
                 id=id,
                 nome=nome,
                 preco=preco,
                 quantidade=quantidade,
-                imagem=imagem_url  # Passa a URL, não o arquivo
+                imagem=imagem_url
             )
 
             if not produto_atualizado:
                 return jsonify({"erro": "Produto não encontrado"}), 404
 
-            # Retorna dados atualizados
             return jsonify({
                 "id": produto_atualizado.id,
                 "nome": produto_atualizado.nome,
@@ -232,7 +226,6 @@ class ProdutoController:
             import traceback
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500
-
     @staticmethod
     def vender_produto(id):
         """
