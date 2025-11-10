@@ -251,7 +251,7 @@ class ProdutoController:
                 "id": nova_venda.id,
                 "produto_id": nova_venda.produto_id,
                 "quantidade": nova_venda.quantidade,
-                "data": nova_venda.data.strftime("%Y-%m-%d %H:%M:%S")  # se houver campo datetime
+                "data_venda": nova_venda.data.strftime("%Y-%m-%d %H:%M:%S")  # se houver campo datetime
             }
 
             return jsonify({"sucesso": "Produto vendido com sucesso!", "nova_venda": venda_dict})
