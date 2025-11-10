@@ -33,40 +33,50 @@ class ProdutoService:
             raise Exception(f"Erro ao criar produto: {str(e)}")
 
         
-        @staticmethod
-        def obter_dados_dashboard():
-            """Combina dados de produtos e vendas para o dashboard"""
+    @staticmethod
+    def obter_dados_dashboard(user_id=None):
+        """Combina dados de produtos e vendas para o dashboard, filtrado por usuário"""
 
+        # Filtra produtos por usuário
+        if user_id:
+            produtos = Produto.query.filter_by(user_id=user_id).all()
+        else:
             produtos = Produto.query.all()
-            if not produtos:
-                return None
+        
+        if not produtos:
+            return None
+        
+        df_produtos = pd.DataFrame([p.to_dict_product() for p in produtos])
 
-            df_produtos = pd.DataFrame([p.to_dict_product() for p in produtos])
-
+        # Filtra vendas por usuário
+        if user_id:
+            vendas = Venda.query.filter_by(user_id=user_id).all()
+        else:
             vendas = Venda.query.all()
-            if vendas:
-                df_vendas = pd.DataFrame([v.to_dict_venda() for v in vendas])
-            else:
-                df_vendas = pd.DataFrame(columns=["id_produto", "quantidade", "valor_total"])
+        
+        if vendas:
+            df_vendas = pd.DataFrame([v.to_dict_venda() for v in vendas])
+        else:
+            df_vendas = pd.DataFrame(columns=["produto_id", "quantidade_vendida", "preco_total"])
 
-            # 🔹 Métricas de vendas
-            total_vendas = df_vendas["valor_total"].sum() if not df_vendas.empty else 0
-            produtos_vendidos = (
-                df_vendas.groupby("id_produto")["quantidade"].sum().reset_index()
-                if not df_vendas.empty
-                else pd.DataFrame(columns=["id_produto", "quantidade"])
-            )
+        # Métricas de vendas
+        total_vendas = df_vendas["preco_total"].sum() if not df_vendas.empty else 0
+        produtos_vendidos = (
+            df_vendas.groupby("produto_id")["quantidade_vendida"].sum().reset_index()
+            if not df_vendas.empty
+            else pd.DataFrame(columns=["produto_id", "quantidade_vendida"])
+        )
 
-            ranking = []
-            if not produtos_vendidos.empty:
-                ranking = produtos_vendidos.sort_values(by="quantidade", ascending=False).head(5).to_dict(orient="records")
+        ranking = []
+        if not produtos_vendidos.empty:
+            ranking = produtos_vendidos.sort_values(by="quantidade_vendida", ascending=False).head(5).to_dict(orient="records")
 
-            return {
-                "produtos": df_produtos,
-                "vendas": df_vendas,
-                "total_vendas": total_vendas,
-                "ranking": ranking
-            }
+        return {
+            "produtos": df_produtos,
+            "vendas": df_vendas,
+            "total_vendas": total_vendas,
+            "ranking": ranking
+        }
 
     @staticmethod
     def listar_produtos(user_id=None):

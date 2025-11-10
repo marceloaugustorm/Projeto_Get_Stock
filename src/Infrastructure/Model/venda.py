@@ -9,8 +9,11 @@ class Venda(db.Model):
     quantidade = db.Column(db.Integer, nullable=False)
     preco_unitario = db.Column(db.Float, nullable=False)
     preco_total = db.Column(db.Float, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # ← ADICIONE
+    data_venda = db.Column(db.DateTime, default=datetime.utcnow)  # ← Opcional mas útil
 
     produto = db.relationship('Produto', back_populates='vendas_relacionadas')
+    usuario = db.relationship('User', backref='vendas')  # ← ADICIONE
 
     def to_dict_venda(self):
         return {
@@ -19,5 +22,7 @@ class Venda(db.Model):
             "quantidade_vendida": self.quantidade,
             "preco_no_momento": self.preco_unitario,
             "preco_total": self.preco_total,
-            "produto_nome": self.produto.nome if self.produto else None
+            "produto_nome": self.produto.nome if self.produto else None,
+            "user_id": self.user_id,  # ← Opcional
+            "data_venda": self.data_venda.isoformat() if self.data_venda else None  # ← Opcional
         }
