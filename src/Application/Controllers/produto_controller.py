@@ -16,49 +16,63 @@ import matplotlib.pyplot as plt
 class ProdutoController:
     @staticmethod
     def register_produto():
-        nome = request.form.get("nome")
-        preco = request.form.get("preco")
-        quantidade = request.form.get("quantidade")
-        status_str = request.form.get("status", "True")
-        status = True if status_str.lower() == "true" else False
-        imagem = request.files.get("imagem")
+        try:
+            # Obtém os campos do formulário
+            nome = request.form.get("nome")
+            preco = request.form.get("preco")
+            quantidade = request.form.get("quantidade")
+            status_str = request.form.get("status", "True")
+            status = True if status_str.lower() == "true" else False
+            imagem = request.files.get("imagem")
 
-        if not all([nome, preco, quantidade]):
-            return jsonify({"erro": "Campos obrigatórios faltando."}), 400
+            # Validação básica
+            if not all([nome, preco, quantidade]):
+                return jsonify({"erro": "Campos obrigatórios faltando."}), 400
 
-        imagem_url = None
-        if imagem:
-            try:
-                supabase = create_client(
-                    os.getenv("SUPABASE_URL"),
-                    os.getenv("SUPABASE_KEY")
-                )
+            imagem_url = None
 
-                file_extension = imagem.filename.split('.')[-1]
-                unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            # Upload da imagem, se houver
+            if imagem:
+                try:
+                    # Inicializa o cliente Supabase
+                    supabase = create_client(
+                        os.getenv("SUPABASE_URL"),
+                        os.getenv("SUPABASE_KEY")
+                    )
 
-                # Upload no bucket 'produtos'
-                supabase.storage.from_("produtos").upload(unique_filename, imagem)
+                    # Gera nome único para o arquivo
+                    file_extension = imagem.filename.split('.')[-1]
+                    unique_filename = f"{uuid.uuid4()}.{file_extension}"
 
-                # Gera link público
-                imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/produtos/{unique_filename}"
+                    # Lê o conteúdo da imagem (bytes)
+                    file_data = imagem.read()
 
-            except Exception as e:
-                return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
+                    # Faz upload no bucket "produtos"
+                    supabase.storage.from_("produtos").upload(unique_filename, file_data)
 
-        produto = ProdutoService.criar_produto(
-            nome, preco, quantidade, status, imagem_url
-        )
+                    # Gera link público da imagem
+                    imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/produtos/{unique_filename}"
 
-        return jsonify({
-            "id": produto.id,
-            "nome": produto.nome,
-            "preco": produto.preco,
-            "quantidade": produto.quantidade,
-            "status": produto.status,
-            "imagem": produto.imagem
-        }), 201
+                except Exception as e:
+                    return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
 
+            # Cria o produto no banco
+            produto = ProdutoService.criar_produto(
+                nome, preco, quantidade, status, imagem_url
+            )
+
+            # Retorna resposta JSON
+            return jsonify({
+                "id": produto.id,
+                "nome": produto.nome,
+                "preco": produto.preco,
+                "quantidade": produto.quantidade,
+                "status": produto.status,
+                "imagem": produto.imagem
+            }), 201
+
+        except Exception as e:
+            return jsonify({"erro": f"Erro ao cadastrar produto: {str(e)}"}), 500
     
 
     @staticmethod
