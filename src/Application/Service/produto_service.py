@@ -99,8 +99,16 @@ class ProdutoService:
         }
 
     @staticmethod
-    def listar_produtos():
-        return Produto.query.filter_by(status=True).all()
+    def listar_produtos(user_id=None):
+        """
+        Lista produtos ativos, opcionalmente filtrados por usuário.
+        """
+        query = Produto.query.filter_by(status=True)
+        
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        
+        return query.all()
 
     @staticmethod
     def atualizar_produtos(id, nome=None, preco=None, quantidade=None, imagem=None):
