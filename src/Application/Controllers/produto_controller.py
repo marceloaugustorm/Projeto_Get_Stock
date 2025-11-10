@@ -40,17 +40,17 @@ class ProdutoController:
                         os.getenv("SUPABASE_KEY")
                     )
 
-                    # Gera nome único para o arquivo
+                    
                     file_extension = imagem.filename.split('.')[-1]
                     unique_filename = f"{uuid.uuid4()}.{file_extension}"
 
-                    # Lê o conteúdo da imagem (bytes)
+                   
                     file_data = imagem.read()
 
-                    # Faz upload no bucket "produtos"
-                    supabase.storage.from_("produtos").upload(unique_filename, file_data)
+                    
+                    supabase.storage.from_("uploads").upload(unique_filename, file_data)
 
-                    # Gera link público da imagem
+                    
                     imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/produtos/{unique_filename}"
 
                 except Exception as e:
