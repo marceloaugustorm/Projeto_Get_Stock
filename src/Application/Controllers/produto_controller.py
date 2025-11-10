@@ -229,10 +229,6 @@ class ProdutoController:
         
     @staticmethod
     def vender_produto(id):
-        """
-        Vende uma quantidade de produto pelo ID.
-        Recebe quantidade_venda via JSON ou form-data.
-        """
         try:
             if request.is_json:
                 data = request.get_json()
@@ -243,14 +239,22 @@ class ProdutoController:
             if quantidade_venda is None:
                 return jsonify({"erro": "Campo 'quantidade_venda' obrigatório"}), 400
 
-            quantidade_venda = int(quantidade_venda)  # <--- converte para inteiro
+            quantidade_venda = int(quantidade_venda)
 
             nova_venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
 
             if erro:
                 return jsonify({"erro": erro}), 400
 
-            return jsonify({"sucesso": "Produto vendido com sucesso!", "nova_venda": nova_venda})
+            # converter para dict antes de enviar
+            venda_dict = {
+                "id": nova_venda.id,
+                "produto_id": nova_venda.produto_id,
+                "quantidade": nova_venda.quantidade,
+                "data": nova_venda.data.strftime("%Y-%m-%d %H:%M:%S")  # se houver campo datetime
+            }
+
+            return jsonify({"sucesso": "Produto vendido com sucesso!", "nova_venda": venda_dict})
 
         except ValueError:
             return jsonify({"erro": "Quantidade inválida"}), 400
