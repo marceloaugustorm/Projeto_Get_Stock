@@ -226,6 +226,7 @@ class ProdutoController:
             import traceback
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500
+        
     @staticmethod
     def vender_produto(id):
         """
@@ -233,7 +234,6 @@ class ProdutoController:
         Recebe quantidade_venda via JSON ou form-data.
         """
         try:
-            
             if request.is_json:
                 data = request.get_json()
                 quantidade_venda = data.get("quantidade_venda")
@@ -243,25 +243,22 @@ class ProdutoController:
             if quantidade_venda is None:
                 return jsonify({"erro": "Campo 'quantidade_venda' obrigatório"}), 400
 
-            
+            quantidade_venda = int(quantidade_venda)  # <--- converte para inteiro
+
             nova_venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
 
             if erro:
                 return jsonify({"erro": erro}), 400
 
-            
-            return jsonify({
-                "id_venda": nova_venda.id,
-                "produto_id": nova_venda.produto_id,
-                "quantidade_vendida": nova_venda.quantidade,
-                "preco_unitario": nova_venda.preco_unitario,
-                "preco_total": nova_venda.preco_total
-            }), 200
+            return jsonify({"sucesso": "Produto vendido com sucesso!", "nova_venda": nova_venda})
 
+        except ValueError:
+            return jsonify({"erro": "Quantidade inválida"}), 400
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return jsonify({"erro": f"Erro ao processar venda: {str(e)}"}), 500 
+            return jsonify({"erro": str(e)}), 500
+
+
+ 
 
     @staticmethod
     def dashboard():
