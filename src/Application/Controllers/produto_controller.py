@@ -94,6 +94,75 @@ class ProdutoController:
             return jsonify({"message": "Produto excluído com sucesso"}), 200
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
+    
+    @staticmethod
+    def list_product():
+        """
+        Retorna todos os produtos ativos.
+        """
+        try:
+            produtos = ProdutoService.listar_produtos()
+            if not produtos:
+                return jsonify([]), 200  
+
+            result = []
+            for p in produtos:
+                result.append({
+                    "id": p.id,
+                    "nome": p.nome,
+                    "preco": float(p.preco),
+                    "quantidade": int(p.quantidade),
+                    "status": p.status,
+                    "imagem": p.imagem if p.imagem else None
+                })
+
+            return jsonify(result), 200
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({"erro": f"Erro ao listar produtos: {str(e)}"}), 500
+        
+
+    @staticmethod
+    def att_produto(id):
+        """
+        Atualiza os dados de um produto pelo ID.
+        Recebe nome, preco, quantidade e imagem via form-data.
+        """
+        try:
+            
+            nome = request.form.get("nome")
+            preco = request.form.get("preco")
+            quantidade = request.form.get("quantidade")
+            imagem = request.files.get("imagem")
+
+            
+            produto = ProdutoService.atualizar_produtos(
+                id=id,
+                nome=nome,
+                preco=preco,
+                quantidade=quantidade,
+                imagem=imagem
+            )
+
+            if not produto:
+                return jsonify({"erro": "Produto não encontrado"}), 404
+
+            # Retorna dados atualizados
+            return jsonify({
+                "id": produto.id,
+                "nome": produto.nome,
+                "preco": produto.preco,
+                "quantidade": produto.quantidade,
+                "status": produto.status,
+                "imagem": produto.imagem
+            }), 200
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500 
 
     @staticmethod
     def dashboard():
