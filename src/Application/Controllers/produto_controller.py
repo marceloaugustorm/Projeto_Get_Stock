@@ -123,8 +123,7 @@ class ProdutoController:
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
     
-    @staticmethod
-    @jwt_required()  
+    @staticmethod 
     def list_product():
         """
         Retorna todos os produtos do usuário logado.
@@ -165,49 +164,42 @@ class ProdutoController:
         """
         try:
             user_id = get_jwt_identity()
-
-            # Converte user_id para int, se necessário
             if isinstance(user_id, str):
                 user_id = int(user_id)
 
             produto = Produto.query.get(id)
-
             if not produto:
                 return jsonify({"erro": "Produto não encontrado"}), 404
 
             if produto.user_id is not None and produto.user_id != user_id:
                 return jsonify({"erro": "Você não tem permissão para editar este produto"}), 403
 
-            nome = request.form.get("nome")
-            preco = request.form.get("preco")
-            quantidade = request.form.get("quantidade")
+            data = request.get_json()  # pega os dados JSON
+            nome = data.get("nome")
+            preco = data.get("preco")
+            quantidade = data.get("quantidade")
+            # imagem continua vindo de form-files se houver upload
             imagem = request.files.get("imagem")
 
             imagem_url = produto.imagem
-
-            # Upload de imagem, se houver
             if imagem:
                 try:
                     supabase = create_client(
                         os.getenv("SUPABASE_URL"),
                         os.getenv("SUPABASE_KEY")
                     )
-
                     file_extension = imagem.filename.split('.')[-1]
                     unique_filename = f"{uuid.uuid4()}.{file_extension}"
-
                     supabase.storage.from_("uploads").upload(unique_filename, imagem.read())
                     imagem_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/uploads/{unique_filename}"
-
                 except Exception as e:
                     return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
 
-            # Atualiza produto convertendo tipos corretamente
             produto_atualizado = ProdutoService.atualizar_produtos(
                 id=id,
                 nome=nome if nome else None,
-                preco=float(preco) if preco else None,
-                quantidade=int(quantidade) if quantidade else None,
+                preco=float(preco) if preco is not None else None,
+                quantidade=int(quantidade) if quantidade is not None else None,
                 imagem=imagem_url if imagem_url else None
             )
 
@@ -229,7 +221,6 @@ class ProdutoController:
             import traceback
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500
-
         
     @staticmethod
     def vender_produto(id):
