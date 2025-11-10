@@ -123,30 +123,33 @@ class ProdutoController:
         
         return jsonify({"message": "Erro ao excluir produto"}), 404
     
-    @staticmethod 
+    @staticmethod
     def list_product():
         """
-        Retorna todos os produtos do usuário logado.
+        Retorna todos os produtos do usuário logado de forma robusta.
+        Ignora produtos com dados inválidos.
         """
         try:
             user_id = get_jwt_identity()
-            
-            
             produtos = ProdutoService.listar_produtos(user_id=user_id)
-            
+
             if not produtos:
                 return jsonify([]), 200  
 
             result = []
             for p in produtos:
-                result.append({
-                    "id": p.id,
-                    "nome": p.nome,
-                    "preco": float(p.preco),
-                    "quantidade": int(p.quantidade),
-                    "status": p.status,
-                    "imagem": p.imagem if p.imagem else None
-                })
+                try:
+                    result.append({
+                        "id": getattr(p, "id", None),
+                        "nome": getattr(p, "nome", "Produto sem nome"),
+                        "preco": float(p.preco) if getattr(p, "preco", None) is not None else 0.0,
+                        "quantidade": int(p.quantidade) if getattr(p, "quantidade", None) is not None else 0,
+                        "status": getattr(p, "status", False),
+                        "imagem": getattr(p, "imagem", None)
+                    })
+                except Exception as e:
+                    print(f"Produto {getattr(p, 'id', '?')} ignorado devido a erro: {e}")
+                    continue
 
             return jsonify(result), 200
 
@@ -154,7 +157,6 @@ class ProdutoController:
             import traceback
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao listar produtos: {str(e)}"}), 500
-
     
 
     @staticmethod
