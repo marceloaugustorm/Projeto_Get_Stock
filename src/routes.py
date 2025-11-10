@@ -74,7 +74,7 @@ def init_routes(app):
     @app.route('/produto/<int:id>/vender', methods=['PATCH'])
     @jwt_required()
     def vender_produto(id):
-        return ProdutoController.vender(id)
+        return ProdutoController.vender_produto(id)
 
     @app.route('/produto/dashboard', methods=['GET'])
     @jwt_required()

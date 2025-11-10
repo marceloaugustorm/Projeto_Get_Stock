@@ -85,6 +85,31 @@ class ProdutoController:
         
         return jsonify({"erro": "Produto não encontrado"}), 404
     
+    @staticmethod
+    def inativar_produto(id):
+        """
+        Inativa um produto pelo ID (soft delete).
+        """
+        try:
+            produto = ProdutoService.inativar_produto(id)
+
+            if not produto:
+                return jsonify({"erro": "Produto não encontrado"}), 404
+
+            return jsonify({
+                "id": produto.id,
+                "nome": produto.nome,
+                "preco": produto.preco,
+                "quantidade": produto.quantidade,
+                "status": produto.status,
+                "imagem": produto.imagem
+            }), 200
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({"erro": f"Erro ao inativar produto: {str(e)}"}), 500
+    
 
     @staticmethod
     def deletar_produto(id):
@@ -162,7 +187,45 @@ class ProdutoController:
         except Exception as e:
             import traceback
             traceback.print_exc()
-            return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500 
+            return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500
+
+
+    @staticmethod
+    def vender_produto(id):
+        """
+        Vende uma quantidade de produto pelo ID.
+        Recebe quantidade_venda via JSON ou form-data.
+        """
+        try:
+            
+            if request.is_json:
+                data = request.get_json()
+                quantidade_venda = data.get("quantidade_venda")
+            else:
+                quantidade_venda = request.form.get("quantidade_venda")
+
+            if quantidade_venda is None:
+                return jsonify({"erro": "Campo 'quantidade_venda' obrigatório"}), 400
+
+            
+            nova_venda, erro = ProdutoService.vender_produto(id, quantidade_venda)
+
+            if erro:
+                return jsonify({"erro": erro}), 400
+
+            
+            return jsonify({
+                "id_venda": nova_venda.id,
+                "produto_id": nova_venda.produto_id,
+                "quantidade_vendida": nova_venda.quantidade,
+                "preco_unitario": nova_venda.preco_unitario,
+                "preco_total": nova_venda.preco_total
+            }), 200
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({"erro": f"Erro ao processar venda: {str(e)}"}), 500 
 
     @staticmethod
     def dashboard():
