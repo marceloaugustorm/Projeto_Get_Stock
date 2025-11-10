@@ -315,7 +315,7 @@ class ProdutoController:
                 
                 plt.figure(figsize=(4, 3))
                 df_prod['status'].value_counts().plot(kind='bar', color=['green', 'red'])
-                plt.title('Produtos Ativos x Inativos')
+                plt.title('Produtos Ativos')
                 plt.xlabel('Status')
                 plt.ylabel('Quantidade')
                 buf1 = io.BytesIO()
