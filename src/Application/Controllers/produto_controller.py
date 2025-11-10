@@ -156,36 +156,36 @@ class ProdutoController:
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao listar produtos: {str(e)}"}), 500
 
-        
+    
 
     @staticmethod
-
     def att_produto(id):
         """
         Atualiza os dados de um produto pelo ID.
         """
         try:
             user_id = get_jwt_identity()
-            
-            # ✅ Converte para int
+
+            # Converte user_id para int, se necessário
             if isinstance(user_id, str):
                 user_id = int(user_id)
-            
+
             produto = Produto.query.get(id)
-            
+
             if not produto:
                 return jsonify({"erro": "Produto não encontrado"}), 404
-            
+
             if produto.user_id is not None and produto.user_id != user_id:
                 return jsonify({"erro": "Você não tem permissão para editar este produto"}), 403
-            
+
             nome = request.form.get("nome")
             preco = request.form.get("preco")
             quantidade = request.form.get("quantidade")
             imagem = request.files.get("imagem")
-            
+
             imagem_url = produto.imagem
 
+            # Upload de imagem, se houver
             if imagem:
                 try:
                     supabase = create_client(
@@ -201,13 +201,14 @@ class ProdutoController:
 
                 except Exception as e:
                     return jsonify({"erro": f"Falha no upload da imagem: {str(e)}"}), 500
-            
+
+            # Atualiza produto convertendo tipos corretamente
             produto_atualizado = ProdutoService.atualizar_produtos(
                 id=id,
-                nome=nome,
-                preco=preco,
-                quantidade=quantidade,
-                imagem=imagem_url
+                nome=nome if nome else None,
+                preco=float(preco) if preco else None,
+                quantidade=int(quantidade) if quantidade else None,
+                imagem=imagem_url if imagem_url else None
             )
 
             if not produto_atualizado:
@@ -222,10 +223,13 @@ class ProdutoController:
                 "imagem": produto_atualizado.imagem
             }), 200
 
+        except ValueError:
+            return jsonify({"erro": "Valores de preço ou quantidade inválidos"}), 400
         except Exception as e:
             import traceback
             traceback.print_exc()
             return jsonify({"erro": f"Erro ao atualizar produto: {str(e)}"}), 500
+
         
     @staticmethod
     def vender_produto(id):
